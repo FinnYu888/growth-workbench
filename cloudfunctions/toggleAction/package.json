@@ -1,0 +1,9 @@
+{
+  "name": "toggleAction",
+  "version": "1.0.0",
+  "description": "切换行动清单勾选状态",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

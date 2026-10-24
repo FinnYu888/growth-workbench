@@ -1,0 +1,9 @@
+{
+  "name": "getPageData",
+  "version": "1.0.0",
+  "description": "组装页面数据（统计卡/任务/图表/行动清单等）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
