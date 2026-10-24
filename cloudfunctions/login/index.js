@@ -21,7 +21,7 @@ exports.main = async (event, context) => {
   try {
     // 显式确保 users 集合存在（add 不会自动建集合，必须先 createCollection）
     try {
-      await db.createCollection({ collectionName: 'users' });
+      await db.createCollection('users');
     } catch (e) {
       // -502001 集合已存在，忽略；其他错误才抛
       if (e.errCode !== -502001 && !/-502001|already exist/i.test(e.errMsg || e.message || '')) throw e;

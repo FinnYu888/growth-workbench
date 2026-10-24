@@ -23,7 +23,7 @@ const COLLECTIONS = [
 // 显式创建集合（已存在 -502001 则忽略，其他错误抛出）
 async function ensureCollection(name) {
   try {
-    await db.createCollection({ collectionName: name });
+    await db.createCollection(name);
     return 'created';
   } catch (e) {
     const code = e.errCode;
