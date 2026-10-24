@@ -1,5 +1,5 @@
 {
-  "description": "个人成长工作台 · 微信小程序",
+  "description": "个人成长工作台 · 微信小程序（云开发）",
   "packOptions": {
     "ignore": [],
     "include": []
@@ -36,9 +36,9 @@
   "compileType": "miniprogram",
   "libVersion": "3.5.5",
   "appid": "wxd99710c857878a41",
-  "projectname": "growth-workbench-mp",
-  "miniprogramRoot": "./",
-  "cloudfunctionRoot": "../cloudfunctions/",
+  "projectname": "growth-workbench",
+  "miniprogramRoot": "miniprogram/",
+  "cloudfunctionRoot": "cloudfunctions/",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",
