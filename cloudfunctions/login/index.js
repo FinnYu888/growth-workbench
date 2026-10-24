@@ -19,14 +19,22 @@ exports.main = async (event, context) => {
   const avatar = (event.avatar || '🧑').toString().slice(0, 8);
 
   try {
-    // 查询用户是否已存在（users 集合可能尚未创建：-502005 时视为新用户）
+    // 显式确保 users 集合存在（add 不会自动建集合，必须先 createCollection）
+    try {
+      await db.createCollection({ collectionName: 'users' });
+    } catch (e) {
+      // -502001 集合已存在，忽略；其他错误才抛
+      if (e.errCode !== -502001 && !/-502001|already exist/i.test(e.errMsg || e.message || '')) throw e;
+    }
+
+    // 查询用户是否已存在
     let user = null;
     try {
       const { data: existing } = await db.collection('users').where({ openid }).get();
       if (existing.length) user = existing[0];
     } catch (e) {
-      // DATABASE_COLLECTION_NOT_EXIST → 集合未创建，走新用户流程（add 会自动建集合）
-      if (!String(e.errCode || e.message).includes('-502005') && !/not exist/i.test(e.message || '')) throw e;
+      // 兜底：查询异常时视为新用户
+      if (!/-502005|not exist/i.test(e.errMsg || e.message || '')) throw e;
     }
 
     if (user) {
@@ -37,7 +45,7 @@ exports.main = async (event, context) => {
       user.nickname = nickname;
       user.avatar = avatar;
     } else {
-      // 新用户：自动注册（集合不存在时 add 自动创建）
+      // 新用户：自动注册
       const newUser = {
         openid,
         nickname,
