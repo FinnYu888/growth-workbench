@@ -1,0 +1,27 @@
+{
+  "name": "growth-workbench",
+  "version": "1.0.0",
+  "description": "个人成长工作台 - 薄荷绿清新风格全栈应用（Node+Express+MySQL+微信模拟登录）",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "initdb": "node server/init_db.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FinnYu888/growth-workbench.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FinnYu888/growth-workbench/issues"
+  },
+  "homepage": "https://github.com/FinnYu888/growth-workbench#readme",
+  "dependencies": {
+    "express": "^5.3.0",
+    "express-session": "^1.19.0",
+    "mysql2": "^3.24.6"
+  }
+}

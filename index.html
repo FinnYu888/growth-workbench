@@ -8,11 +8,36 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="app">
+<!-- 微信授权登录遮罩 -->
+<div class="login-mask" id="loginMask">
+  <div class="login-card">
+    <div class="login-header">
+      <span class="lh-logo">🌱</span>
+      <span class="lh-title">个人成长工作台</span>
+    </div>
+    <div class="login-body">
+      <div class="wx-logo">💬</div>
+      <div class="login-app">个人成长工作台 请求授权</div>
+      <div class="login-desc">使用微信授权登录，开启你的成长记录之旅</div>
+      <div class="login-field">
+        <label>微信昵称</label>
+        <input type="text" id="wxNick" placeholder="请输入微信昵称" maxlength="20" value="小柚子">
+      </div>
+      <div class="login-field">
+        <label>头像表情</label>
+        <input type="text" id="wxAvatar" placeholder="一个 emoji" maxlength="4" value="👧">
+      </div>
+      <button class="login-btn" id="wxLoginBtn">💬 微信授权登录</button>
+      <div class="login-tip">本地模拟授权 · 真实接入需配置微信开放平台 AppID</div>
+      <div class="login-state" id="loginState"></div>
+    </div>
+  </div>
+</div>
+<!-- 工作台主体 -->
+<div class="app" id="app" style="display:none">
   <aside class="sidebar" id="sidebar"></aside>
   <main class="main" id="main"></main>
 </div>
-<script src="js/data.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
