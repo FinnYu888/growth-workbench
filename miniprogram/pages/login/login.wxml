@@ -1,0 +1,46 @@
+<view class="login-page">
+  <view class="logo-box">
+    <view class="logo">🌱</view>
+    <view class="title">个人成长工作台</view>
+    <view class="slogan">记录与成长 · 每天遇见更好的自己</view>
+  </view>
+
+  <view class="form">
+    <!-- 微信头像选择 -->
+    <view class="avatar-row">
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <image wx:if="{{avatarUrl}}" class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" />
+        <view wx:else class="avatar-ph">
+          <text class="avatar-emoji">🧑</text>
+          <text class="avatar-tip">点击选择微信头像</text>
+        </view>
+      </button>
+    </view>
+
+    <!-- 微信昵称输入 -->
+    <view class="nick-row">
+      <input
+        type="nickname"
+        class="nick-input"
+        placeholder="请输入微信昵称"
+        bindinput="onInputNickname"
+        value="{{nickname}}"
+      />
+    </view>
+
+    <!-- 协议 -->
+    <view class="agree-row" bindtap="toggleAgree">
+      <view class="check {{agreed ? 'on' : ''}}">{{agreed ? '✓' : ''}}</view>
+      <text class="agree-text">我已阅读并同意《用户协议》与《隐私政策》</text>
+    </view>
+
+    <!-- 登录按钮 -->
+    <button class="login-btn" bindtap="doLogin" loading="{{loading}}" disabled="{{loading}}">
+      微信授权登录
+    </button>
+
+    <view class="skip" bindtap="skip">先逛逛 →</view>
+  </view>
+
+  <view class="foot">登录后标题将显示为「{{nickname || '你的昵称'}}的工作台」</view>
+</view>

@@ -1,0 +1,257 @@
+<view class="app-wrap">
+  <block wx:if="{{loading}}"><view class="loading">加载中…</view></block>
+  <block wx:elif="{{pg}}">
+    <!-- 标题区 -->
+    <view class="page-title">{{pg.title}}</view>
+    <view class="page-sub">{{pg.sub}}</view>
+    <view class="page-date">{{pg.date}}</view>
+
+    <!-- 统计卡网格（点击查看详情） -->
+    <view class="stats-grid" wx:if="{{pg.stats.length}}">
+      <view
+        wx:for="{{pg.stats}}"
+        wx:key="statKey"
+        class="stat-cell t-{{item.tone}}"
+        data-key="{{item.statKey}}"
+        bindtap="tapStat"
+      >
+        <view class="stat-icon">{{item.icon}}</view>
+        <view class="stat-val">{{item.value}}<text class="stat-unit">{{item.unit}}</text></view>
+        <view class="stat-label">{{item.label}}</view>
+        <view class="stat-sub">{{item.sub}}</view>
+      </view>
+    </view>
+
+    <!-- 今日任务卡 -->
+    <view class="card task-card" wx:if="{{pg.task}}">
+      <view class="task-top">
+        <view class="task-title">{{pg.task.title}}</view>
+        <view class="task-tag t-{{pg.task.tagTone}}" wx:if="{{pg.task.tag}}">{{pg.task.tag}}</view>
+      </view>
+      <view class="task-desc">{{pg.task.desc}}</view>
+      <view class="task-reward" wx:if="{{pg.task.reward}}">奖励：{{pg.task.reward}}</view>
+      <view class="btn {{pg.task.btnDone ? 'done' : ''}}" bindtap="tapTask">{{pg.task.btnDone ? '已完成 ✓' : pg.task.btn}}</view>
+    </view>
+
+    <!-- banner -->
+    <view class="banner" wx:if="{{pg.banner}}">
+      <text class="banner-ic">{{pg.banner.icon}}</text>
+      <view class="banner-body">
+        <view class="banner-title">{{pg.banner.title}}</view>
+        <view class="banner-desc">{{pg.banner.desc}}</view>
+      </view>
+    </view>
+
+    <!-- sections 循环渲染 -->
+    <block wx:for="{{pg.sections}}" wx:for-item="sec" wx:key="title">
+      <!-- 折线/柱状图 -->
+      <view class="card" wx:if="{{sec.type === 'trend'}}" data-key="{{pg.stats[0].statKey}}" bindtap="tapSection">
+        <view class="card-title">{{sec.title}}{{sec.unit}} <text class="more" wx:if="{{sec.lineName}}">{{sec.lineName}}</text></view>
+        <view class="chart-bars">
+          <view class="bar-col" wx:for="{{sec.bars}}" wx:for-item="b" wx:key="lb">
+            <view class="bar" style="height:{{b.h}}%;background:{{sec.color}}"></view>
+            <view class="bar-v">{{b.v}}</view>
+            <view class="bar-l">{{b.lb}}</view>
+          </view>
+        </view>
+      </view>
+      <!-- 双柱状图 -->
+      <view class="card" wx:elif="{{sec.type === 'dual'}}" data-key="{{pg.stats[0].statKey}}" bindtap="tapSection">
+        <view class="card-title">{{sec.title}}</view>
+        <view class="dual-legend"><view class="lg"><view class="lg-dot" style="background:#14b8a6"></view>{{sec.aname}}</view><view class="lg"><view class="lg-dot" style="background:#60a5fa"></view>{{sec.bname}}</view></view>
+        <view class="chart-bars dual">
+          <view class="bar-col" wx:for="{{sec.bars}}" wx:for-item="b" wx:key="lb">
+            <view class="dual-bars"><view class="bar" style="height:{{b.ah}}%;background:#14b8a6"></view><view class="bar" style="height:{{b.bh}}%;background:#60a5fa"></view></view>
+            <view class="bar-l">{{b.lb}}</view>
+          </view>
+        </view>
+      </view>
+      <!-- 环形图 -->
+      <view class="card" wx:elif="{{sec.type === 'donut'}}" data-key="{{pg.stats[0].statKey}}" bindtap="tapSection">
+        <view class="card-title">{{sec.title}}</view>
+        <view class="donut-wrap">
+          <view class="donut" style="background:conic-gradient({{sec.grad}})">
+            <view class="donut-center">
+              <view class="donut-c-v">{{sec.center}}</view>
+              <view class="donut-c-l">{{sec.centerLabel}}</view>
+            </view>
+          </view>
+        </view>
+        <view class="donut-legend">
+          <view class="lg" wx:for="{{sec.items}}" wx:key="name"><view class="lg-dot" style="background:{{item.color}}"></view>{{item.name}} {{item.pct}}%</view>
+        </view>
+      </view>
+      <!-- 通用列表 -->
+      <view class="card" wx:elif="{{sec.type === 'list'}}">
+        <view class="card-title">{{sec.title}} <text class="more" wx:if="{{sec.more}}">{{sec.more}}</text></view>
+        <view class="list">
+          <view class="list-item" wx:for="{{sec.items}}" wx:for-item="it" wx:key="title" data-key="{{it.statKey}}" bindtap="tapListItem">
+            <view class="list-ic t-{{it.tone}}">{{it.ic}}</view>
+            <view class="list-body">
+              <view class="list-title">{{it.title}}<text class="list-done" wx:if="{{it.done}}"> ✓</text></view>
+              <view class="list-meta">{{it.meta}}</view>
+            </view>
+            <view class="list-right" wx:if="{{it.right}}">{{it.right}}</view>
+          </view>
+        </view>
+      </view>
+      <!-- 行动清单（可勾选） -->
+      <view class="card" wx:elif="{{sec.type === 'action'}}">
+        <view class="card-title">{{sec.title}}</view>
+        <view class="action-list">
+          <view class="action-item" wx:for="{{sec.items}}" wx:for-item="a" wx:for-index="i" wx:key="id" data-id="{{a.id}}" data-idx="{{i}}" bindtap="toggleAction">
+            <view class="check {{a.done ? 'on' : ''}}">{{a.done ? '✓' : ''}}</view>
+            <view class="action-body">
+              <view class="action-t {{a.done ? 'done' : ''}}">{{a.t}}</view>
+              <view class="action-meta" wx:if="{{a.meta}}">{{a.meta}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <!-- 喝水进度 -->
+      <view class="card" wx:elif="{{sec.type === 'water'}}">
+        <view class="card-title">{{sec.title}}</view>
+        <view class="water-ring" style="background:conic-gradient(#22d3ee {{sec.pct}}%, #e0f7fa {{sec.pct}}% 100%)">
+          <view class="water-center"><view class="water-v">{{sec.cups}}/{{sec.total}}</view><view class="water-l">杯</view></view>
+        </view>
+        <view class="water-note">{{sec.note}}</view>
+      </view>
+      <!-- 饮食总览 -->
+      <view class="card" wx:elif="{{sec.type === 'food'}}">
+        <view class="card-title">{{sec.title}} <text class="more" wx:if="{{sec.more}}">{{sec.more}}</text></view>
+        <view class="list">
+          <view class="list-item" wx:for="{{sec.items}}" wx:for-item="it" wx:key="title" data-key="{{it.statKey}}" bindtap="tapListItem">
+            <view class="list-ic t-{{it.tone}}">{{it.ic}}</view>
+            <view class="list-body"><view class="list-title">{{it.title}}</view><view class="list-meta">{{it.meta}}</view></view>
+            <view class="list-right kcal">{{it.right}}</view>
+          </view>
+        </view>
+      </view>
+      <!-- 食谱推荐 -->
+      <view class="card recipe-card" wx:elif="{{sec.type === 'recipe'}}" style="background:{{sec.grad}}">
+        <view class="recipe-emoji">{{sec.emoji}}</view>
+        <view class="recipe-title">{{sec.title2}}</view>
+        <view class="recipe-tags"><text class="recipe-tag" wx:for="{{sec.tags}}" wx:key="*this">{{item}}</text></view>
+        <view class="recipe-kcal">{{sec.kcal}}</view>
+        <view class="recipe-desc">{{sec.desc}}</view>
+      </view>
+      <!-- 视频跟练卡 -->
+      <view class="card vcard" wx:elif="{{sec.type === 'vcard'}}" style="background:{{sec.grad}}">
+        <view class="vc-emoji">{{sec.emoji}}</view>
+        <view class="vc-title">{{sec.vtitle}}</view>
+        <view class="vc-desc">{{sec.vdesc}}</view>
+        <view class="vc-tags"><text class="vc-tag" wx:for="{{sec.tags}}" wx:key="*this">{{item}}</text></view>
+        <view class="vc-meta"><text wx:for="{{sec.meta}}" wx:key="*this" class="vc-meta-i">{{item}}</text></view>
+        <view class="btn vc-btn" bindtap="tapVcard">{{sec.btn}}</view>
+      </view>
+      <!-- 4 格统计 -->
+      <view class="card" wx:elif="{{sec.type === 'stat4'}}">
+        <view class="card-title">{{sec.title}}</view>
+        <view class="stat4-grid">
+          <view class="stat4-cell" wx:for="{{sec.items}}" wx:for-item="it" wx:key="label">
+            <view class="stat4-ic t-{{it.tone}}">{{it.ic}}</view>
+            <view class="stat4-v">{{it.v}}<text class="stat4-u">{{it.unit}}</text></view>
+            <view class="stat4-l">{{it.label}}</view>
+            <view class="stat4-d">{{it.d}}</view>
+          </view>
+        </view>
+      </view>
+      <!-- 塔罗翻牌 -->
+      <view class="card" wx:elif="{{sec.type === 'tarot'}}">
+        <view class="card-title">{{sec.title}} <text class="more">{{sec.more}}</text></view>
+        <view class="tarot-tabs"><view class="tarot-tab" wx:for="{{sec.tabs}}" wx:key="*this">{{item}}</view></view>
+        <view class="tarot-grid">
+          <view class="tarot-card" wx:for="{{sec.cards}}" wx:for-item="c" wx:for-index="i" wx:key="num" data-idx="{{i}}" bindtap="flipTarot">
+            <view class="tarot-face {{tarotFlipped[i] ? 'flipped' : ''}}">
+              <view class="tarot-back"><view class="tarot-back-emoji">🔮</view><view class="tarot-back-t">点击翻牌</view></view>
+              <view class="tarot-front"><view class="tarot-num">{{c.num}}</view><view class="tarot-emoji">{{c.emoji}}</view><view class="tarot-name">{{c.name}}</view></view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <!-- 牌意 -->
+      <view class="card" wx:elif="{{sec.type === 'cardMeaning'}}">
+        <view class="card-title">{{sec.title}} <text class="more">{{sec.more}}</text></view>
+        <view class="cm-head"><view class="cm-emoji">{{sec.num}}</view><view><view class="cm-name">{{sec.name}}</view><view class="cm-tags"><text class="cm-tag" wx:for="{{sec.tags}}" wx:key="*this">{{item}}</text></view></view></view>
+        <view class="cm-text">{{sec.text}}</view>
+      </view>
+      <!-- 快速概览 -->
+      <view class="card" wx:elif="{{sec.type === 'quick'}}">
+        <view class="card-title">{{sec.title}}</view>
+        <view class="quick-grid">
+          <view class="quick-cell" wx:for="{{sec.items}}" wx:for-item="it" wx:key="label">
+            <view class="quick-ic t-{{it.tone}}">{{it.ic}}</view>
+            <view class="quick-v">{{it.v}}</view>
+            <view class="quick-l">{{it.label}}</view>
+            <view class="quick-d">{{it.d}}</view>
+            <view class="quick-bar"><view class="quick-bar-fill" style="width:{{it.pct}}%;background:#14b8a6"></view></view>
+          </view>
+        </view>
+      </view>
+      <!-- 熟练度 -->
+      <view class="card" wx:elif="{{sec.type === 'mastery'}}">
+        <view class="card-title">{{sec.title}} <text class="more">{{sec.more}}</text></view>
+        <view class="mastery-list">
+          <view class="mastery-row" wx:for="{{sec.rows}}" wx:for-item="r" wx:key="name">
+            <view class="mastery-ic">{{r[0]}}</view>
+            <view class="mastery-name">{{r[1]}}</view>
+            <view class="mastery-bar"><view class="mastery-fill" style="width:{{r[2]}}%;background:linear-gradient(90deg,#14b8a6,#5eead4)"></view></view>
+            <view class="mastery-pct">{{r[2]}}%</view>
+          </view>
+        </view>
+      </view>
+      <!-- 大进度环 -->
+      <view class="card" wx:elif="{{sec.type === 'bigring'}}">
+        <view class="card-title">{{sec.title}} <text class="more">{{sec.note}}</text></view>
+        <view class="bigring" style="background:{{sec.ringGrad}}">
+          <view class="bigring-center"><view class="bigring-pct">{{sec.pct}}%</view><view class="bigring-l">完成率</view></view>
+        </view>
+      </view>
+      <!-- 待办 -->
+      <view class="card" wx:elif="{{sec.type === 'todo'}}">
+        <view class="card-title">{{sec.title}} <text class="more">{{sec.cta}}</text></view>
+        <view class="list">
+          <view class="list-item" wx:for="{{sec.items}}" wx:for-item="it" wx:key="title" data-key="{{it.statKey}}" bindtap="tapListItem">
+            <view class="list-ic t-{{it.tone}}">{{it.ic}}</view>
+            <view class="list-body"><view class="list-title">{{it.title}}</view><view class="list-meta">{{it.meta}}</view></view>
+          </view>
+        </view>
+      </view>
+      <!-- 成长记录 -->
+      <view class="card" wx:elif="{{sec.type === 'journal'}}">
+        <view class="card-title">{{sec.title}} <text class="more">{{sec.more}}</text></view>
+        <view class="journal-date">{{sec.date}}</view>
+        <view class="journal-text">{{sec.text}}</view>
+        <view class="journal-photos"><text class="jp" wx:for="{{sec.photos}}" wx:key="*this">{{item}}</text></view>
+      </view>
+      <!-- 时间安排 -->
+      <view class="card" wx:elif="{{sec.type === 'schedule'}}">
+        <view class="card-title">{{sec.title}} <text class="more" wx:if="{{sec.more}}">{{sec.more}}</text></view>
+        <view class="sched-list">
+          <view class="sched-item" wx:for="{{sec.items}}" wx:for-item="it" wx:key="title" data-key="{{it.statKey}}" bindtap="tapListItem">
+            <view class="sched-time">{{it.time}}</view>
+            <view class="sched-ic t-{{it.tone}}">{{it.ic}}</view>
+            <view class="sched-body"><view class="sched-title">{{it.title}}</view><view class="sched-meta">{{it.meta}}</view></view>
+            <view class="sched-right">{{it.right}}</view>
+          </view>
+        </view>
+      </view>
+      <!-- 网格占位（模块入口） -->
+      <view class="card" wx:elif="{{sec.type === 'grid'}}">
+        <view class="card-title">模块入口</view>
+        <view class="grid-tip">在「工作台」首页可查看全部模块</view>
+      </view>
+      <!-- 日历占位 -->
+      <view class="card" wx:elif="{{sec.type === 'calendar'}}">
+        <view class="card-title">本月打卡</view>
+        <view class="cal-strip">
+          <view class="cal-day" wx:for="{{[1,2,3,4,5,6,7,8,9,10,11,12,13,14]}}" wx:key="*this" style="background:{{item <= 8 ? '#14b8a6' : '#e6f7f1'}}">{{item}}</view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 小结与引言 -->
+    <view class="summary" wx:if="{{pg.summary}}">{{pg.summary}}</view>
+    <view class="quote" wx:if="{{pg.quote}}">{{pg.quote}}</view>
+  </block>
+</view>

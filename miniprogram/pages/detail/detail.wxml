@@ -1,0 +1,70 @@
+<view class="app-wrap detail">
+  <block wx:if="{{loading}}"><view class="loading">加载中…</view></block>
+  <block wx:elif="{{detail}}">
+    <!-- 概要 -->
+    <view class="card detail-hero t-{{detail.tone}}">
+      <view class="dh-icon">{{detail.icon}}</view>
+      <view class="dh-val">{{detail.value}}<text class="dh-unit">{{detail.unit}}</text></view>
+      <view class="dh-label">{{detail.title}}</view>
+      <view class="dh-sub">{{detail.sub}}</view>
+    </view>
+
+    <!-- 趋势图 -->
+    <view class="card" wx:if="{{detail.trend}}">
+      <view class="card-title">{{detail.trend.title}} <text class="more">{{detail.trend.lineName || ''}}</text></view>
+      <view class="chart-bars">
+        <view class="bar-col" wx:for="{{detail.trend.bars}}" wx:for-item="b" wx:key="lb">
+          <view class="bar" style="height:{{b.h}}%;background:{{detail.trend.color}}"></view>
+          <view class="bar-v">{{b.v}}</view>
+          <view class="bar-l">{{b.lb}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 明细列表 -->
+    <view class="card">
+      <view class="card-title">{{detail.subtitle}}</view>
+      <view class="detail-rows">
+        <view class="detail-row" wx:for="{{detail.rows}}" wx:key="label">
+          <view class="dr-label">{{item.label}}</view>
+          <view class="dr-value">{{item.value}}</view>
+        </view>
+        <view class="empty" wx:if="{{!detail.rows.length}}">暂无明细数据</view>
+      </view>
+    </view>
+
+    <!-- 额外信息（如营养构成） -->
+    <view class="card" wx:if="{{detail.extra}}">
+      <view class="card-title">{{detail.extra.title}}</view>
+      <view class="extra-grid">
+        <view class="extra-cell" wx:for="{{detail.extra.items}}" wx:key="label">
+          <view class="extra-dot" style="background:{{item[2]}}"></view>
+          <view class="extra-name">{{item[0]}}</view>
+          <view class="extra-v">{{item[1]}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 塔罗牌意（如有） -->
+    <view class="card" wx:if="{{detail.cards}}">
+      <view class="card-title">全部牌意</view>
+      <view class="tarot-detail-list">
+        <view
+          class="tarot-detail-item"
+          wx:for="{{detail.cards}}"
+          wx:key="num"
+          data-name="{{item.num}} {{item.emoji}} {{item.name}}"
+          data-meaning="{{item.meaning}}"
+          bindtap="tapCard"
+        >
+          <view class="td-head"><text class="td-num">{{item.num}}</text><text class="td-emoji">{{item.emoji}}</text><text class="td-name">{{item.name}}</text></view>
+          <view class="td-tags"><text class="td-tag" wx:for="{{item.tags}}" wx:for-item="tg" wx:key="*this">{{tg}}</text></view>
+          <view class="td-meaning">{{item.meaning}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 说明 -->
+    <view class="summary" wx:if="{{detail.note}}">{{detail.note}}</view>
+  </block>
+</view>

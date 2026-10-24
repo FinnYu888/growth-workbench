@@ -1,0 +1,48 @@
+<view class="app-wrap index">
+  <!-- 标题区 -->
+  <view class="hero">
+    <view class="hero-title">{{nickname}}的工作台</view>
+    <view class="hero-sub">记录与成长 · 每天遇见更好的自己</view>
+  </view>
+
+  <block wx:if="{{loading}}"><view class="loading">加载中…</view></block>
+  <block wx:else>
+    <!-- 概览统计卡 -->
+    <view class="stats-grid" wx:if="{{pageData.stats}}">
+      <view
+        wx:for="{{pageData.stats}}"
+        wx:key="label"
+        class="stat-cell t-{{item.tone}}"
+        data-key="{{item.statKey}}"
+        bindtap="tapStat"
+      >
+        <view class="stat-icon">{{item.icon}}</view>
+        <view class="stat-val">{{item.value}}<text class="stat-unit">{{item.unit}}</text></view>
+        <view class="stat-label">{{item.label}}</view>
+        <view class="stat-sub">{{item.sub}}</view>
+      </view>
+    </view>
+
+    <!-- 模块入口网格 -->
+    <view class="card">
+      <view class="card-title">全部功能 <text class="more">共 {{modules.length}} 个模块</text></view>
+      <view class="module-grid">
+        <view
+          wx:for="{{modules}}"
+          wx:key="code"
+          class="module-cell"
+          data-code="{{item.code}}"
+          data-name="{{item.name}}"
+          bindtap="goModule"
+        >
+          <view class="module-ic t-{{item.tone}}">{{item.icon}}</view>
+          <view class="module-name">{{item.name}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 本周小结 -->
+    <view class="summary" wx:if="{{pageData.summary}}">{{pageData.summary}}</view>
+    <view class="quote" wx:if="{{pageData.quote}}">{{pageData.quote}}</view>
+  </block>
+</view>

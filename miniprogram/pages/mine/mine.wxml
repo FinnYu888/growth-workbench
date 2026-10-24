@@ -1,0 +1,45 @@
+<view class="app-wrap mine">
+  <!-- 用户信息卡 -->
+  <view class="user-card">
+    <view class="user-avatar">{{user.avatar || '🧑'}}</view>
+    <view class="user-meta">
+      <view class="user-name">{{user.nickname || '微信用户'}}</view>
+      <view class="user-tag">{{user.level_tag || '成长新星'}}</view>
+      <view class="user-sig">{{user.signature || '记录美好的生活，每天启幕。'}}</view>
+    </view>
+  </view>
+
+  <!-- 成长数据 -->
+  <view class="data-row">
+    <view class="data-cell">
+      <view class="data-v">{{user.growth_days || 1}}</view>
+      <view class="data-l">成长天数</view>
+    </view>
+    <view class="data-cell">
+      <view class="data-v">{{user.total_score || 0}}</view>
+      <view class="data-l">成长积分</view>
+    </view>
+  </view>
+
+  <!-- 功能入口 -->
+  <view class="card">
+    <view class="card-title">快捷入口</view>
+    <view class="menu-list">
+      <view
+        wx:for="{{menuList}}"
+        wx:key="code"
+        class="menu-item"
+        data-code="{{item.code}}"
+        data-name="{{item.name}}"
+        bindtap="goPage"
+      >
+        <view class="menu-ic t-{{item.code === 'settings' ? 'teal' : 'blue'}}">{{item.icon}}</view>
+        <view class="menu-name">{{item.name}}</view>
+        <view class="menu-arrow">›</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <button class="logout-btn" bindtap="logout">退出登录</button>
+</view>

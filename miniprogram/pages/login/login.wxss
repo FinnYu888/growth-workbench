@@ -1,0 +1,56 @@
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #e6f7f1 0%, #f5fbf8 40%);
+  padding: 80rpx 48rpx;
+  display: flex; flex-direction: column; align-items: center;
+}
+.logo-box { text-align: center; margin: 60rpx 0 80rpx; }
+.logo {
+  width: 144rpx; height: 144rpx; border-radius: 36rpx;
+  background: #fff; box-shadow: 0 8rpx 24rpx rgba(20,184,166,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 72rpx; margin: 0 auto 24rpx;
+}
+.title { font-size: 44rpx; font-weight: 700; color: #1f2937; }
+.slogan { font-size: 26rpx; color: #6b7280; margin-top: 12rpx; }
+
+.form { width: 100%; max-width: 600rpx; }
+.avatar-row { display: flex; justify-content: center; margin-bottom: 48rpx; }
+.avatar-btn {
+  width: 160rpx; height: 160rpx; padding: 0; border-radius: 50%;
+  background: #fff; box-shadow: 0 4rpx 16rpx rgba(20,184,166,0.1);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  line-height: 1.4;
+}
+.avatar-btn::after { border: none; }
+.avatar-img { width: 160rpx; height: 160rpx; border-radius: 50%; }
+.avatar-ph { display: flex; flex-direction: column; align-items: center; }
+.avatar-emoji { font-size: 56rpx; }
+.avatar-tip { font-size: 18rpx; color: #9ca3af; margin-top: 4rpx; }
+
+.nick-row {
+  background: #fff; border-radius: 20rpx; padding: 8rpx 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(20,184,166,0.06); margin-bottom: 32rpx;
+}
+.nick-input { height: 88rpx; font-size: 30rpx; color: #1f2937; }
+
+.agree-row { display: flex; align-items: center; margin-bottom: 40rpx; }
+.check {
+  width: 36rpx; height: 36rpx; border-radius: 50%; border: 2rpx solid #c6c6c6;
+  margin-right: 16rpx; display: flex; align-items: center; justify-content: center;
+  font-size: 22rpx; color: #fff;
+}
+.check.on { background: #14b8a6; border-color: #14b8a6; }
+.agree-text { font-size: 24rpx; color: #6b7280; }
+
+.login-btn {
+  width: 100%; height: 96rpx; line-height: 96rpx; border-radius: 999rpx;
+  background: #14b8a6; color: #fff; font-size: 32rpx; font-weight: 600;
+  box-shadow: 0 6rpx 18rpx rgba(20,184,166,0.3);
+}
+.login-btn::after { border: none; }
+.login-btn[disabled] { opacity: .6; }
+
+.skip { text-align: center; color: #9ca3af; font-size: 26rpx; margin-top: 32rpx; }
+
+.foot { font-size: 22rpx; color: #9ca3af; margin-top: 80rpx; text-align: center; }

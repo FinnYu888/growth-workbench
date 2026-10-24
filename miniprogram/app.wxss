@@ -1,0 +1,77 @@
+/* ============ 个人成长工作台小程序 · 全局样式（薄荷绿清新风） ============ */
+page {
+  --teal: #14b8a6;
+  --teal-bg: #e6f7f1;
+  --teal-soft: #d3f3ea;
+  --blue: #60a5fa;
+  --orange: #f59e0b;
+  --red: #f43f5e;
+  --purple: #a78bfa;
+  --yellow: #fbbf24;
+  --green: #4ade80;
+  --indigo: #6366f1;
+  --pink: #f472b6;
+  --cyan: #22d3ee;
+  --text: #1f2937;
+  --text-sub: #6b7280;
+  --line: #eef2f1;
+  --card: #ffffff;
+  background: #f5fbf8;
+  color: var(--text);
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 28rpx;
+  line-height: 1.55;
+}
+
+view, text, scroll-view { box-sizing: border-box; }
+
+.app-wrap { min-height: 100vh; padding: 24rpx 24rpx 48rpx; }
+
+/* 卡片 */
+.card {
+  background: var(--card);
+  border-radius: 24rpx;
+  padding: 28rpx;
+  box-shadow: 0 4rpx 18rpx rgba(20, 184, 166, 0.06);
+  margin-bottom: 24rpx;
+}
+.card-title { font-size: 30rpx; font-weight: 600; color: var(--text); display: flex; align-items: center; justify-content: space-between; }
+.card-title .more { font-size: 24rpx; color: var(--teal); font-weight: 400; }
+
+/* 色调 */
+.t-teal { background: var(--teal-bg); color: var(--teal); }
+.t-blue { background: #eaf2ff; color: var(--blue); }
+.t-orange { background: #fff4e6; color: var(--orange); }
+.t-red { background: #ffe9ec; color: var(--red); }
+.t-purple { background: #f3edff; color: var(--purple); }
+.t-yellow { background: #fff8e1; color: #b07d12; }
+.t-green { background: #e7fbe9; color: #16a34a; }
+.t-indigo { background: #ebedff; color: var(--indigo); }
+.t-pink { background: #fde8f1; color: var(--pink); }
+.t-cyan { background: #d9f7fb; color: var(--cyan); }
+
+/* 通用按钮 */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 14rpx 36rpx; border-radius: 999rpx;
+  font-size: 26rpx; font-weight: 500; line-height: 1.4;
+  background: var(--teal); color: #fff;
+}
+.btn.full { width: 100%; padding: 24rpx; font-size: 30rpx; }
+.btn.ghost { background: var(--teal-bg); color: var(--teal); }
+.btn.done { background: #e9f5ef; color: #7aa399; }
+
+/* 页面标题 */
+.page-title { font-size: 44rpx; font-weight: 700; color: var(--text); margin-bottom: 8rpx; }
+.page-sub { font-size: 24rpx; color: var(--text-sub); margin-bottom: 24rpx; }
+.page-date { font-size: 24rpx; color: var(--text-sub); margin: 4rpx 0 24rpx; }
+
+/* 摘要 / 引言 */
+.summary { font-size: 26rpx; color: var(--text-sub); line-height: 1.7; background: var(--teal-soft); border-radius: 20rpx; padding: 22rpx 26rpx; margin-bottom: 24rpx; }
+.quote { font-size: 24rpx; color: var(--teal); text-align: center; margin: 24rpx 0; font-style: italic; }
+
+/* 空状态 */
+.empty { text-align: center; color: var(--text-sub); font-size: 26rpx; padding: 60rpx 0; }
+
+/* 加载 */
+.loading { text-align: center; color: var(--text-sub); padding: 80rpx 0; font-size: 26rpx; }

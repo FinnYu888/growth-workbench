@@ -24,25 +24,88 @@ app.use(session({
 }));
 app.use(express.static(path.join(__dirname, '..')));
 
-/* ---------- 鉴权 ---------- */
-function auth(req, res, next) {
-  if (req.session && req.session.userId) return next();
-  return res.status(401).json({ error: '未登录', code: 'NO_AUTH' });
+/* ---------- 微信小程序配置 ---------- */
+const WX_APPID = 'wxd99710c857878a41';
+// 真实授权登录需配置 AppSecret（微信公众平台→开发→开发设置）。
+// 未配置时降级为开发态：用 code 作伪 openid，保证登录流程可跑通。
+const WX_APP_SECRET = process.env.WX_APP_SECRET || '';
+
+/* 用 wx.login 的 code 调用微信 code2session 换取 openid */
+async function code2session(code) {
+  if (!WX_APP_SECRET) {
+    return { openid: 'dev_' + String(code).slice(0, 16), session_key: '', dev: true };
+  }
+  const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${WX_APPID}&secret=${WX_APP_SECRET}&js_code=${encodeURIComponent(code)}&grant_type=authorization_code`;
+  const r = await fetch(url);
+  const j = await r.json();
+  if (j.errcode) throw new Error('code2session 失败(' + j.errcode + '): ' + j.errmsg);
+  return { openid: j.openid, session_key: j.session_key, dev: false };
 }
 
-/* 微信模拟登录：接收 nickname，映射到预置用户(id=1)复用数据，session 存昵称 */
-app.post('/api/auth/wx-login', async (req, res) => {
-  const nickname = (req.body.nickname || '微信用户').toString().trim().slice(0, 32) || '微信用户';
-  const avatar = (req.body.avatar || '🧑').toString().slice(0, 8);
+/* ---------- 鉴权：兼容 token（小程序）与 session（web） ---------- */
+async function auth(req, res, next) {
   try {
-    // 复用预置用户(id=1)的数据，仅动态更新昵称头像，保证所有页面数据可用
-    await pool.query('UPDATE wb_users SET nickname=?, avatar=? WHERE id=1', [nickname, avatar]);
+    const token = req.headers['x-wb-token'];
+    if (token) {
+      const [s] = await pool.query('SELECT user_id, nickname FROM wb_login_sessions WHERE session_token=?', [token]);
+      if (s.length) {
+        req.session = req.session || {};
+        req.session.userId = s[0].user_id;
+        req.session.nickname = s[0].nickname;
+        req.session.token = token;
+        return next();
+      }
+      return res.status(401).json({ error: 'token 已失效', code: 'NO_AUTH' });
+    }
+    if (req.session && req.session.userId) return next();
+    return res.status(401).json({ error: '未登录', code: 'NO_AUTH' });
+  } catch (e) { return res.status(500).json({ error: '鉴权异常: ' + e.message }); }
+}
+
+/* 微信小程序登录：接收 wx.login 的 code（换取 openid）+ 用户授权的 nickname/avatar */
+app.post('/api/auth/wx-login', async (req, res) => {
+  const { code, nickname, avatar } = req.body;
+  try {
+    let userId;
+    if (code) {
+      // 真实流程：code → code2session → openid
+      const wx = await code2session(code);
+      const openid = wx.openid;
+      const [u] = await pool.query('SELECT id FROM wb_users WHERE openid=?', [openid]);
+      const nick = (nickname || '微信用户').toString().trim().slice(0, 32) || '微信用户';
+      const av = (avatar || '🧑').toString().slice(0, 8);
+      if (u.length) {
+        userId = u[0].id;
+        await pool.query('UPDATE wb_users SET nickname=?, avatar=? WHERE id=?', [nick, av, userId]);
+      } else {
+        // 新用户：注册
+        const [ins] = await pool.query(
+          'INSERT INTO wb_users(openid,nickname,avatar,growth_days,total_score,level_tag,signature) VALUES(?,?,?,1,0,?,?)',
+          [openid, nick, av, '成长新星', '记录美好的生活，每天启幕。']
+        );
+        userId = ins.insertId;
+      }
+    } else {
+      // 兼容旧模拟登录（无 code 时复用预置用户）
+      userId = 1;
+      const nick = (nickname || '微信用户').toString().trim().slice(0, 32) || '微信用户';
+      const av = (avatar || '🧑').toString().slice(0, 8);
+      await pool.query('UPDATE wb_users SET nickname=?, avatar=? WHERE id=1', [nick, av]);
+    }
+    const [u] = await pool.query('SELECT * FROM wb_users WHERE id=?', [userId]);
+    const user = u[0];
     const token = crypto.randomBytes(16).toString('hex');
-    await pool.query('INSERT INTO wb_login_sessions(session_token,user_id,nickname) VALUES(?,?,?)', [token, 1, nickname]);
-    req.session.userId = 1;
-    req.session.nickname = nickname;
+    await pool.query('INSERT INTO wb_login_sessions(session_token,user_id,nickname) VALUES(?,?,?)', [token, userId, user.nickname]);
+    req.session = req.session || {};
+    req.session.userId = userId;
+    req.session.nickname = user.nickname;
     req.session.token = token;
-    res.json({ ok: true, nickname, avatar, token });
+    res.json({
+      ok: true, token, dev: !WX_APP_SECRET,
+      nickname: user.nickname, avatar: user.avatar,
+      growth_days: user.growth_days, total_score: user.total_score,
+      level_tag: user.level_tag, signature: user.signature,
+    });
   } catch (e) {
     res.status(500).json({ error: '登录失败: ' + e.message });
   }
@@ -225,6 +288,80 @@ app.get('/api/page/:code', auth, async (req, res) => {
     const pg = await getPageData(req.params.code, req.session.userId);
     if (!pg) return res.status(404).json({ error: '页面不存在' });
     res.json(pg);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ---------- 卡片/图表详情：点击统计卡查看明细 ---------- */
+app.get('/api/detail/:code/:statKey', auth, async (req, res) => {
+  const { code, statKey } = req.params;
+  try {
+    const [[stat]] = await pool.query('SELECT * FROM wb_page_stats WHERE module_code=? AND stat_key=?', [code, statKey]);
+    if (!stat) return res.status(404).json({ error: '不存在' });
+    const result = {
+      code, statKey,
+      icon: stat.icon, tone: stat.tone,
+      title: stat.label, value: stat.value, unit: stat.unit || '', sub: stat.sub || '',
+      subtitle: '明细数据', rows: [], trend: null, note: stat.sub || '',
+    };
+    const [tr] = await pool.query("SELECT * FROM wb_trends WHERE module_code=? ORDER BY id", [code]);
+    if (tr.length) result.trend = { title: tr[0].title, labels: tr[0].labels.split(','), values: tr[0].vals.split(',').map(Number), unit: tr[0].unit, color: tr[0].color, lineName: tr[0].line_name };
+
+    switch (code) {
+      case 'diet': {
+        const [dl] = await pool.query('SELECT * FROM wb_diet_log ORDER BY sort');
+        const [n] = await pool.query('SELECT * FROM wb_nutrition ORDER BY id LIMIT 1');
+        result.subtitle = '今日饮食明细';
+        result.rows = dl.map(d => ({ label: d.icon + ' ' + d.meal_type + ' · ' + d.meal_time, value: d.food + ' · ' + d.kcal }));
+        if (n.length) result.extra = { title: '营养构成', items: [['碳水', n[0].carb + 'g', '#60a5fa'], ['蛋白质', n[0].protein + 'g', '#4ade80'], ['脂肪', n[0].fat + 'g', '#fbbf24'], ['纤维', n[0].fiber + 'g', '#a78bfa'], ['总热量', n[0].total_kcal + 'kcal', '#14b8a6']] };
+        break;
+      }
+      case 'fitness': {
+        const [pl] = await pool.query("SELECT * FROM wb_practice_log WHERE module_code='fitness' ORDER BY sort");
+        result.subtitle = '运动练习记录';
+        result.rows = pl.map(p => ({ label: p.icon + ' ' + p.title, value: p.meta + ' · ' + p.right_txt }));
+        break;
+      }
+      case 'film': {
+        const [pl] = await pool.query("SELECT * FROM wb_practice_log WHERE module_code='film' ORDER BY sort");
+        result.subtitle = '拍摄剪辑记录';
+        result.rows = pl.map(p => ({ label: p.icon + ' ' + p.title, value: p.meta + ' · ' + p.right_txt }));
+        break;
+      }
+      case 'tarot': {
+        const [tc] = await pool.query('SELECT * FROM wb_tarot_cards ORDER BY id');
+        result.subtitle = '塔罗牌意详情';
+        result.rows = tc.map(c => ({ label: c.card_num + ' ' + c.emoji + ' ' + c.card_name, value: c.tags }));
+        result.cards = tc.map(c => ({ num: c.card_num, name: c.card_name, emoji: c.emoji, tags: c.tags, meaning: c.meaning }));
+        break;
+      }
+      case 'plan':
+      case 'wellness':
+      case 'tcm':
+      case 'french': {
+        const [ar] = await pool.query('SELECT * FROM wb_articles WHERE module_code=? ORDER BY sort', [code]);
+        result.subtitle = '学习内容明细';
+        result.rows = ar.map(a => ({ label: a.icon + ' ' + a.title, value: a.meta + (a.done ? ' · ✅' : ' · ○') }));
+        break;
+      }
+      case 'profile': {
+        const [ms] = await pool.query('SELECT * FROM wb_mastery ORDER BY id');
+        result.subtitle = '各模块熟练度';
+        result.rows = ms.map(m => ({ label: m.icon + ' ' + m.name, value: m.percent + '%' }));
+        break;
+      }
+      case 'home': {
+        const [m] = await pool.query('SELECT * FROM wb_modules WHERE visible=1 ORDER BY sort_order');
+        result.subtitle = '工作台模块总览';
+        result.rows = m.map(x => ({ label: x.icon + ' ' + x.name, value: x.code }));
+        break;
+      }
+      default: {
+        const [s] = await pool.query('SELECT label,value,unit,sub FROM wb_page_stats WHERE module_code=? ORDER BY sort', [code]);
+        result.subtitle = '本页统计概览';
+        result.rows = s.map(x => ({ label: x.label, value: x.value + (x.unit || '') }));
+      }
+    }
+    res.json(result);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
