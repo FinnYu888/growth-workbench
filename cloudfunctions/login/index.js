@@ -23,8 +23,13 @@ exports.main = async (event, context) => {
     try {
       await db.createCollection('users');
     } catch (e) {
-      // -502001 集合已存在，忽略；其他错误才抛
-      if (e.errCode !== -502001 && !/-502001|already exist/i.test(e.errMsg || e.message || '')) throw e;
+      // 集合已存在的几种错误码/文案，忽略：
+      //   -501001 ResourceExist / Table exist（实际遇到）
+      //   -502001 DATABASE_COLLECTION_ALREADY_EXIST（文档）
+      const code = e.errCode;
+      const msg = e.errMsg || e.message || '';
+      if (code !== -501001 && code !== -502001 &&
+          !/-501001|-502001|ResourceExist|Table exist|already exist|collection exist/i.test(msg)) throw e;
     }
 
     // 查询用户是否已存在

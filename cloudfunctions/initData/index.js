@@ -20,7 +20,7 @@ const COLLECTIONS = [
   'settings', 'schedule', 'practice_log',
 ];
 
-// 显式创建集合（已存在 -502001 则忽略，其他错误抛出）
+// 显式创建集合（已存在 -501001/-502001 则忽略，其他错误抛出）
 async function ensureCollection(name) {
   try {
     await db.createCollection(name);
@@ -28,8 +28,11 @@ async function ensureCollection(name) {
   } catch (e) {
     const code = e.errCode;
     const msg = String(e.errMsg || e.message || '');
-    // -502001 collection already exists 是正常的，忽略
-    if (code === -502001 || /-502001|already exist|collection exist/i.test(msg)) {
+    // 集合已存在的几种错误码/文案，统一视为已存在：
+    //   -501001 ResourceUnavailable.ResourceExist / Table exist（实际遇到）
+    //   -502001 DATABASE_COLLECTION_ALREADY_EXIST（文档说的）
+    if (code === -501001 || code === -502001 ||
+        /-501001|-502001|ResourceExist|Table exist|already exist|collection exist|collection already/i.test(msg)) {
       return 'exists';
     }
     throw new Error('createCollection(' + name + ') 失败: ' + (msg || JSON.stringify(e)));
