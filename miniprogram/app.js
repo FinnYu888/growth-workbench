@@ -13,7 +13,7 @@ App({
     // 未填写 env 时使用「首个环境」，生产建议显式指定。
     if (wx.cloud) {
       wx.cloud.init({
-        // env: 'your-cloud-env-id',   // ← 在微信开发者工具「云开发」控制台获取环境 ID 后填这里
+        env: 'cloud1-d3g4xftzc71738643',
         traceUser: true,
       });
     }
