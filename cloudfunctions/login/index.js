@@ -19,20 +19,25 @@ exports.main = async (event, context) => {
   const avatar = (event.avatar || '🧑').toString().slice(0, 8);
 
   try {
-    // 查询用户是否已存在
-    const { data: existing } = await db.collection('users').where({ openid }).get();
-    let user;
+    // 查询用户是否已存在（users 集合可能尚未创建：-502005 时视为新用户）
+    let user = null;
+    try {
+      const { data: existing } = await db.collection('users').where({ openid }).get();
+      if (existing.length) user = existing[0];
+    } catch (e) {
+      // DATABASE_COLLECTION_NOT_EXIST → 集合未创建，走新用户流程（add 会自动建集合）
+      if (!String(e.errCode || e.message).includes('-502005') && !/not exist/i.test(e.message || '')) throw e;
+    }
 
-    if (existing.length) {
+    if (user) {
       // 老用户：更新昵称头像（不重置 growth_days/score）
-      user = existing[0];
       await db.collection('users').doc(user._id).update({
         data: { nickname, avatar },
       });
       user.nickname = nickname;
       user.avatar = avatar;
     } else {
-      // 新用户：自动注册
+      // 新用户：自动注册（集合不存在时 add 自动创建）
       const newUser = {
         openid,
         nickname,
